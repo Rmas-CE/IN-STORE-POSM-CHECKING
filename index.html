@@ -8,7 +8,8 @@
 <meta name="theme-color" content="#0a6f86">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" media="print" onload="this.media='all'">
 <style>
 [hidden]{display:none!important}body{margin:0}img{max-width:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 /* Layout: single mobile-first column; step cards stacked, sticky header with sync state, sticky submit bar */
@@ -202,11 +203,11 @@ td img{width:40px;height:40px;object-fit:cover;border-radius:5px;display:block}
     </div>
     <div class="legend">
       <span style="--c:var(--ok)">Complete</span>
-      <span style="--c:var(--warn)">No Stock (counts as complete)</span>
+      <span style="--c:var(--warn)">No POSM Stock (counts as complete)</span>
       <span style="--c:var(--bad)">Incomplete</span>
       <span style="--c:var(--old)">CTN/EOL (not scored)</span>
     </div>
-    <div class="meta" style="margin-bottom:8px">A live camera photo is required for Incomplete and No Stock.</div>
+    <div class="meta" style="margin-bottom:8px"><b>No POSM Stock</b> = the POSM is missing because the warehouse has no POSM stock to deploy. It is not about the unit or model being out of stock.<br>A live camera photo is required for Incomplete and No POSM Stock.</div>
     <div class="models" id="modelList"></div>
   </section>
 
@@ -246,8 +247,8 @@ let STORES= // [region, ts, store, dealer, agency, latitude, longitude, address]
 let MODELS= // BU: [model code, description, category]
 {"AV":[["QA115QN90FGXXP","115\" Neo","VIDEO"],["QA100QN80FGXXP","110\" Neo","VIDEO"],["UA98DU9000GXXP","98\" UHD","VIDEO"],["QA85QN950FGXXP","85\" 8K Neo","VIDEO"],["UA85U8000FGXXP","85\" UHD","VIDEO"],["QA83S95FAEXXP","83\" OLED","VIDEO"],["QA77S95FAGXXP","77\" OLED","VIDEO"],["QA75QN90FAGXXP","75\" 4K Neo","VIDEO"],["QA75Q8FAAGXXP","75\" QLED","VIDEO"],["QA75Q7FAAGXXP","75\" QLED","VIDEO"],["UA75U8000FGXXP","75\" UHD","VIDEO"],["UA75U8020FGXXP","75\" UHD","VIDEO"],["UA75U8030FGXXP","75\" UHD","VIDEO"],["QA65QN950FGXXP","65\" 8K Neo","VIDEO"],["QA65QN90FAGXXP","65\" 4K Neo","VIDEO"],["QA65QN70FAGXXP","65\" 4K Neo","VIDEO"],["QA65S95FAGXXP","65\" OLED","VIDEO"],["QA65S85FAEXXP","65\" OLED","VIDEO"],["QA65LS03FAGXXP","65\" LS","VIDEO"],["QA65Q8FAAGXXP","65\" QLED","VIDEO"],["QA65Q8F2AGXXP","65\" QLED","VIDEO"],["QA65Q8F3AGXXP","65\" QLED","VIDEO"],["QA65Q7FAAGXXP","65\" QLED","VIDEO"],["UA65U8000FGXXP","65\" UHD","VIDEO"],["UA65U8020FGXXP","65\" UHD","VIDEO"],["UA65U8030FGXXP","65\" UHD","VIDEO"],["QA55QN90FAGXXP","55\" 4K Neo","VIDEO"],["QA55QN83FAGXXP","55\" 4K Neo","VIDEO"],["QA55QN70FAGXXP","55\" 4K Neo","VIDEO"],["QA55S95FAGXXP","55\" OLED","VIDEO"],["QA55S90FAGXXP","55\" OLED","VIDEO"],["QA55S85FAEXXP","55\" OLED","VIDEO"],["QA55LS03FAGXXP","55\" LS","VIDEO"],["QA55LS01DAGXXP","55\" LS","VIDEO"],["QA55Q8FAAGXXP","55\" QLED","VIDEO"],["QA55Q8F2AGXXP","55\" QLED","VIDEO"],["QA55Q8F3AGXXP","55\" QLED","VIDEO"],["QA55Q7FAAGXXP","55\" QLED","VIDEO"],["UA55U8000FGXXP","55\" UHD","VIDEO"],["UA55U8020FGXXP","55\" UHD","VIDEO"],["UA55U8030FGXXP","55\" UHD","VIDEO"],["QA50QN80FAGXXP","50\" 4K Neo","VIDEO"],["QA50QN82FAGXXP","50\" 4K Neo","VIDEO"],["QA50Q8FAAGXXP","50\" QLED","VIDEO"],["QA50Q8F2AGXXP","50\" QLED","VIDEO"],["QA50Q8F3AGXXP","50\" QLED","VIDEO"],["QA50Q7FAAGXXP","50\" QLED","VIDEO"],["UA50U8000FGXXP","50\" UHD","VIDEO"],["QA43LS03FAGXXP","43\" LS","VIDEO"],["QA43LS01DAGXXP","43\" LS","VIDEO"],["UA43U8000FGXXP","43\" UHD","VIDEO"],["UA32H5000FGXXP","32\" HD","VIDEO"],["MRA85R95HAGXXP","85\" MRGB","VIDEO"],["MRA75R95HAGXXP","75\" MRGB","VIDEO"],["MRA100R85HGXXP","100\" MRGB","VIDEO"],["MRA65R85HAGXXP","65\" MRGB","VIDEO"],["MRA55R85HAGXXP","55\" MRGB","VIDEO"],["QA55S95HAGXXP","55\" OLED","VIDEO"],["QA83S90HAEXXP","83\" OLED","VIDEO"],["QA77S90HAGXXP","77\" OLED","VIDEO"],["QA65S90HAGXXP","65\" OLED","VIDEO"],["QA55S90HAGXXP","55\" OLED","VIDEO"],["QA65S85HAEXXP","65\" OLED","VIDEO"],["QA55S85HAEXXP","55\" OLED","VIDEO"],["QA100QN80HGXXP","100\" Neo 4K","VIDEO"],["QA85QN80HAGXXP","85\" Neo 4K","VIDEO"],["QA75QN80HAGXXP","75\" Neo 4K","VIDEO"],["QA65QN80HAGXXP","65\" Neo 4K","VIDEO"],["QA55QN80HAGXXP","55\" Neo 5K","VIDEO"],["QA65LS03HEGXXP","65\" LS","VIDEO"],["QA55LS03HEGXXP","55\" LS","VIDEO"],["QA43LS03HEGXXP","43\" LS","VIDEO"],["UA27LSM7FAXXXP","27\" LS","VIDEO"],["UA100M90HGXXP","100\" MiniLED","VIDEO"],["UA75M80HAGXXP","75\" MiniLED","VIDEO"],["UA65M80HAGXXP","65\" MiniLED","VIDEO"],["UA55M80HAGXXP","55\" MiniLED","VIDEO"],["UA65M82HAGXXP","65\" MiniLED","VIDEO"],["UA55M82HAGXXP","55\" MiniLED","VIDEO"],["UA65M83HAGXXP","65\" MIniLED","VIDEO"],["UA55M83HAGXXP","55\" MiniLED","VIDEO"],["UA75M70HAGXXP","75\" MIniLED","VIDEO"],["UA65M70HAGXXP","65\" MiniLED","VIDEO"],["UA55M70HAGXXP","55\" MiniLED","VIDEO"],["UA50M70HAGXXP","50\" MiniLED","VIDEO"],["UA75M1EHAGXXP","75\" MiniLED","VIDEO"],["UA65M1EHAGXXP","65\" MiniLED","VIDEO"],["UA55M1EHAGXXP","55\" MiniLED","VIDEO"],["UA50M1EHAGXXP","50\" MiniLED","VIDEO"],["UA98U9000HGXXP","98\" UHD","VIDEO"],["UA85U8500HGXXP","85\" UHD","VIDEO"],["UA75U8500HGXXP","75\" UHD","VIDEO"],["UA65U8500HGXXP","65\" UHD","VIDEO"],["UA55U8500HGXXP","55\" UHD","VIDEO"],["UA50U8500HGXXP","50\" UHD","VIDEO"],["UA43U8500HGXXP","43\" UHD","VIDEO"],["UA75U8520HGXXP","75\" UHD","VIDEO"],["UA65U8520HGXXP","65\" UHD","VIDEO"],["UA55U8520HGXXP","55\" UHD","VIDEO"],["UA75U8530HGXXP","75\" UHD","VIDEO"],["UA65U8530HGXXP","65\" UHD","VIDEO"],["UA55U8530HGXXP","55\" UHD","VIDEO"],["UA75U8000HGXXP","75\" UHD","VIDEO"],["UA65U8000HGXXP","65\" UHD","VIDEO"],["UA55U8000HGXXP","55\" UHD","VIDEO"],["UA50U8000HGXXP","50\" UHD","VIDEO"],["UA43U8000HGXXP","43\" UHD","VIDEO"],["MNA114MS1CCXXP","","VIDEO"],["SP-LFF3CLAXXXP","","VIDEO"],["QA98QN90DAGXXP","","VIDEO"],["QA98Q80CAGXXP","","VIDEO"],["QA85QN900DGXXP","","VIDEO"],["QA85QN87DAGXXP","","VIDEO"],["QA85Q60DAGXXP","","VIDEO"],["UA85DU8100GXXP","","VIDEO"],["QA77S95DAGXXP","","VIDEO"],["QA75QN800DGXXP","","VIDEO"],["QA75QN87DAGXXP","","VIDEO"],["UA75DU8100GXXP","","VIDEO"],["QA65QN800DGXXP","","VIDEO"],["QA65QN87DAGXXP","","VIDEO"],["QA65S95DAGXXP","","VIDEO"],["QA65LS03DAGXXP","","VIDEO"],["QA75Q60DAGXXP","","VIDEO"],["QA65Q60DAGXXP","","VIDEO"],["QA65QE1DAGXXP","","VIDEO"],["QA55QN87DAGXXP","","VIDEO"],["QA55S90DAGXXP","","VIDEO"],["QA55Q60DAGXXP","","VIDEO"],["QA55LS03DAGXXP","","VIDEO"],["QA55QE1DAGXXP","","VIDEO"],["QA50QN90DAGXXP","","VIDEO"],["QA50Q60DAGXXP","","VIDEO"],["QA50QE1DAGXXP","","VIDEO"],["UA65DU8100GXXP","","VIDEO"],["UA65DU7000GXXP","","VIDEO"],["UA55DU8100GXXP","","VIDEO"],["UA55DU7000GXXP","","VIDEO"],["UA50DU7000GXXP","","VIDEO"],["QA43QN90DAGXXP","","VIDEO"],["QA43LS05BAGXXP","","VIDEO"],["QA43LS03DAGXXP","","VIDEO"],["UA43DU7000GXXP","","VIDEO"],["UA32T4300AGXXP","","VIDEO"],["HW-S800D/XP","","SD"],["MX-ST50B/XP","","SD"],["MX-T70/XP","","SD"],["MX-T50/XP","","SD"],["MX-ST50F/XP","","SD"],["MX-ST40F/XP","","SD"],["MX-T40/XP","","SD"],["HW-T420/XP","","SD"],["HW-Q990F/XP","","SD"],["HW-Q930F/XP","","SD"],["HW-Q800F/XP","","SD"],["HW-QS700F/XP","","SD"],["HW-Q600H/XP","","SD"],["HW-Q600F/XP","","SD"],["HW-B400F/XP","","SD"],["HW-B450F/XP","","SD"],["HW-Q990H/XP","","SD"],["HW-Q930H/XP","","SD"],["HW-Q800H/XP","","SD"],["HW-Q990D/XP","","SD"],["HW-Q930D/XP","","SD"],["HW-Q800D/XP","","SD"],["HW-Q600C/XP","","SD"],["HW-C450/XP","","SD"],["HW-C400/XP","","SD"],["HW-LS60D/XP","","SD"]],"HA":[["DV80T5220TT/TC","","WM"],["DV90BB7440GWTC","","WM"],["MC32DG7646CKTC","","MWO"],["MC32K7055KT/TC","","MWO"],["MC35R8088LC/TC","","MWO"],["MG30T5018CC/TC","","MWO"],["MS23K3513AS/TC","","MWO"],["MS23K3513AW/TC","","MWO"],["MS23K3515AS/TC","","MWO"],["MS23T5018AP/TC","","MWO"],["MS23T5018AW/TC","","MWO"],["MS32DG4504AGTC","","MWO"],["MS32DG4504ATTC","","MWO"],["RB27N4020S9/TC","","REF"],["RB45DG600ES9TC","","REF"],["RF48A4010B4/TC","","REF"],["RF65DB90B022TC","","REF"],["RS57DG4000B4TC","","REF"],["RS57DG4000M9TC","","REF"],["RS70F65KNFTC","","REF"],["RS70F65QNFTC","","REF"],["RS70F65QNTTC","","REF"],["RS70F65QNWTC","","REF"],["RS90F65ANFTC","","REF"],["RS90F65DNFTC","","REF"],["RT20FARVDSA/TC","","REF"],["RT22M4033UT/TC","","REF"],["RT25FARBDUT/TC","","REF"],["RT31CB5624C2TC","","REF"],["RT31CB564422TC","","REF"],["RT31CB56448CTC","","REF"],["RT31CG5424S9TC","","REF"],["RT35CG5444S9TC","","REF"],["RT38CB66228ATC","","REF"],["RT42CG6422S9TC","","REF"],["RT42CG6442B1TC","","REF"],["WA40F10E1CTC","","WM"],["WA40F12E4CTC","","WM"],["WA75CG4240BYTC","","WM"],["WA75H4200SW/TC","","WM"],["WA75T4262VS/TC","","WM"],["WA80F13S5CTC","","WM"],["WA80F15S5CTC","","WM"],["WA80F15S5LTC","","WM"],["WA80F19S8BTC","","WM"],["WA90CG4545BDTC","","WM"],["WA90CG4546BVTC","","WM"],["WD10HG5U34BETC","","WM"],["WD10HG6U94BBTC","","WM"],["WD12DB7B85GBTC","","WM"],["WD12DG6B85BBTC","","WM"],["WD13BB944DGMTC","","WM"],["WD16T6300GP/TC","","WM"],["WD19T6500GV/TC","","WM"],["WD25DB8995BZTC","","WM"],["WT12J4200MB/TC","","WM"],["WT16B5240BA/TC","","WM"],["WT85H3210MG/TC","","WM"],["WT95H3230MB/TC","","WM"],["WW10DB7U34GWTC","","WM"],["WW70FG3M05TW/TC","","WM"],["WW12CGP44DSHTC","","WM"],["WW13BB944DGBTC","","WM"],["WW90FG3M05TWTC","","WM"]],"AC":[["AR80H10DACWNTC","","AI Expert"],["AR80H13DACWNTC","","AI Expert"],["AR80H18DACWNTC","","AI Expert"],["AR80H24DACWNTC","","AI Expert"],["AR70H10DAABNTC","","BESPOKE in Charcoal Black"],["AR70H13DAABNTC","","BESPOKE in Charcoal Black"],["AR70H10D1HWNTC","","AI Smart"],["AR70H13D1HWNTC","","AI Smart"],["AR70H18D1HWNTC","","AI Smart"],["AR70H24D1HWNTC","","AI Smart"],["AR60H10D1FWNTC","","Comfort"],["AR60H13D1FWNTC","","Comfort"],["AR60H18D1FWNTC","","Comfort"],["AR60H24D1FWNTC","","Comfort"],["AR10AYKAGWKNTC","","Premium Plus"],["AR13AYKAGWKNTC","","Premium Plus"],["AR18AYKAGWKNTC","","Premium Plus"],["AR24AYKAGWKNTC","","Premium Plus"],["AR10CYECABTNTC","","BESPOKE in Midnight Black"],["AR13CYECABTNTC","","BESPOKE in Midnight Black"],["AR10CYEAAWKNTC","","Premium"],["AR13CYEAAWKNTC","","Premium"],["AR18CYEAAWKNTC","","Premium"],["AR24CYEAAWKNTC","","Premium"],["AR10BYHAMWKNTC","","Comfort"],["AR13BYHAMWKNTC","","Comfort"],["AR18BYHAMWKNTC","","Comfort"],["AR24BYHAMWKNTC","","Comfort"],["AR10CYEAAMBNTC","","Morning Blue"],["AR13CYEAAMBNTC","","Morning Blue"],["AW40F09D0ATNTC","","Window Inverter"],["AW40F12D0ATNTC","","Window Inverter"],["AW40H18D0ATNTC","","Window Inverter"],["AW40H24D0ATNTC","","Window Inverter"],["AC030BNPDKCTC","","Floor Standing"],["AC036BNPDKCTC","","Floor Standing"],["AC048BNPDKCTC","","Floor Standing"],["AC078DNPDKCEA","","Floor Standing"],["AC096DNPDKCEA","","Floor Standing"],["AJ050FCD2KFEA","","DELUXE Outdoor"],["AJ050FCD3KFEA","","DELUXE Outdoor"],["AJ015FEADKFEA","","DELUXE indoor Wall Mounted"],["AJ020FEADKFEA","","DELUXE indoor Wall Mounted"],["AJ025FEADKFEA","","DELUXE indoor Wall Mounted"],["AJ035FEADKFEA","","DELUXE indoor Wall Mounted"],["AJ050FEADKFEA","","DELUXE indoor Wall Mounted"],["AJ050FCJ2KFEA","","PREMIUM Outdoor"],["AJ070FCJ3KFEA","","PREMIUM Outdoor"],["AJ080FCJ4KFEA","","PREMIUM Outdoor"],["AJ100FCJ5KFEA","","PREMIUM Outdoor"],["AJ025FEAPKFEA","","PREMIUM Indoor Wall Mounted"],["AJ035FEAPKFEA","","PREMIUM Indoor Wall Mounted"],["AJ050FEAPKFEA","","PREMIUM Indoor Wall Mounted"],["AJ071FEAPKFEA","","PREMIUM Indoor Wall Mounted"],["AJ026FE1PKFEA","","PREMIUM Indoor Wall Mounted 1-Way Cassette"],["AJ035FE1PKFEA","","PREMIUM Indoor Wall Mounted 1-Way Cassette"],["AJ052FE1PKFEA","","PREMIUM Indoor Wall Mounted 1-Way Cassette"],["AJ065FE1PKFEA","","PREMIUM Indoor Wall Mounted 1-Way Cassette"],["AJ026FE1FKFEA","","PREMIUM Indoor 1-Way Infinite Cassette"],["AJ035FE1FKFEA","","PREMIUM Indoor 1-Way Infinite Cassette"],["AJ052FE1FKFEA","","PREMIUM Indoor 1-Way Infinite Cassette"],["AJ060FE1FKFEA","","PREMIUM Indoor 1-Way Infinite Cassette"],["AJ052FE6PKFEA","","PREMIUM Indoor"],["AJ071FE6PKFEA","","PREMIUM Indoor"],["AJ140TXJ5KCEA","","Outdoor"],["AJ100TXJ5KCEA","","Outdoor"],["AJ080TXJ4KCEA","","Outdoor"],["AJ058TXJ3KCEA","","Outdoor"],["AJ050TXJ2KCEA","","Outdoor"],["AJ068TNAPKHEA","","Indoor Wall Mounted WindFree"],["AJ050TNAPKHEA","","Indoor Wall Mounted WindFree"],["AJ035TNAPKHEA","","Indoor Wall Mounted WindFree"],["AJ025TNAPKHEA","","Indoor Wall Mounted WindFree"],["AJ020TNAPKHEA","","Indoor Wall Mounted WindFree"],["AJ068TNTDKHEA","","Indoor Wall Mounted Standard"],["AJ050TNTDKHEA","","Indoor Wall Mounted Standard"],["AJ035TNTDKHEA","","Indoor Wall Mounted Standard"],["AJ025TNTDKHEA","","Indoor Wall Mounted Standard"],["AJ020TNTDKHEA","","Indoor Wall Mounted Standard"],["AJ071TNLDKHEA","","Ducted"],["AJ052TNLDKHEA","","Ducted"],["AJ035TNLDKHEA","","Ducted"],["F360C25WRPF","","360 Cassette (White Round) R32"],["F360C40WRPF","","360 Cassette (White Round) R32"],["F360C45WRPF","","360 Cassette (White Round) R32"],["F360C50WRPF","","360 Cassette (White Round) R32"],["F360C60WRPF","","360 Cassette (White Round) R32"],["F360C25WSQF","","360 Cassette (White Square) R32"],["F360C40WSQF","","360 Cassette (White Square) R32"],["F360C45WSQF","","360 Cassette (White Square) R32"],["F360C50WSQF","","360 Cassette (White Square) R32"],["F360C60WSQF","","360 Cassette (White Square) R32"],["F360C25BRPF","","360 Cassette (Black Round) R32"],["F360C40BRPF","","360 Cassette (Black Round) R32"],["F360C45BRPF","","360 Cassette (Black Round) R32"],["F360C50BRPF","","360 Cassette (Black Round) R32"],["F360C25BSQF","","360 Cassette (Black Square) R32"],["F360C40BSQF","","360 Cassette (Black Square) R32"],["F360C45BSQF","","360 Cassette (Black Square) R32"],["F360C50BSQF","","360 Cassette (Black Square) R32"],["F360C60BSQF","","360 Cassette (Black Square) R32"],["F360C25WPPF","","360 Cassette (White Round Purifying Panel) R32"],["F360C40WPPF","","360 Cassette (White Round Purifying Panel) R32"],["F360C45WPPF","","360 Cassette (White Round Purifying Panel) R32"],["F360C50WPPF","","360 Cassette (White Round Purifying Panel) R32"],["F360C60WPPF","","360 Cassette (White Round Purifying Panel) R32"],["FWF4W25WSPF","","WindFree™ 4Way Cassette (Standard Panel) R32"],["FWF4W40WSPF","","WindFree™ 4Way Cassette (Standard Panel) R32"],["FWF4W45WSPF","","WindFree™ 4Way Cassette (Standard Panel) R32"],["FWF4W50WSPF","","WindFree™ 4Way Cassette (Standard Panel) R32"],["FWF4W60WSPF","","WindFree™ 4Way Cassette (Standard Panel) R32"],["FWF4W25WPPF","","WindFree™ 4Way Cassette (Purifying Panel) R32"],["FWF4W40WPPF","","WindFree™ 4Way Cassette (Purifying Panel) R32"],["FWF4W45WPPF","","WindFree™ 4Way Cassette (Purifying Panel) R32"],["FWF4W50WPPF","","WindFree™ 4Way Cassette (Purifying Panel) R32"],["FWF4W60WPPF","","WindFree™ 4Way Cassette (Purifying Panel) R32"],["FWF1W10WSPF","","WindFree™ 1Way Cassette (Standard Panel) R32"],["FWF1W15WSPF","","WindFree™ 1Way Cassette (Standard Panel) R32"],["FWF1W20WSPF","","WindFree™ 1Way Cassette (Standard Panel) R32"],["FWF1W25WSPF","","WindFree™ 1Way Cassette (Standard Panel) R32"],["FWF1W10WPPF","","WindFree™ 1Way Cassette (Purifying Panel) R32"],["FWF1W15WPPF","","WindFree™ 1Way Cassette (Purifying Panel) R32"],["FWF1W20WPPF","","WindFree™ 1Way Cassette (Purifying Panel) R32"],["FWF1W25WPPF","","WindFree™ 1Way Cassette (Purifying Panel) R32"],["FCEILING25F","","Ceiling Suspended R32"],["FCEILING40F","","Ceiling Suspended R32"],["FCEILING45F","","Ceiling Suspended R32"],["FCEILING50F","","Ceiling Suspended R32"],["FCEILING60F","","Ceiling Suspended R32"],["FDUCT20F","","Ducted R32"],["FDUCT25F","","Ducted R32"],["FDUCT36F","","Ducted R32"],["FDUCT40F","","Ducted R32"],["FDUCT50F","","Ducted R32"],["FDUCT60F","","Ducted R32"]]};
 const BUS=[{k:"AV",n:"TV & Audio"},{k:"HA",n:"Home Appliances"},{k:"AC",n:"Aircon"}];
-const ST={C:"Complete",N:"Incomplete – No Stock",I:"Incomplete",O:"CTN/EOL"};
-const ST_SHORT={C:"Complete",N:"No Stock",I:"Incomplete",O:"CTN/EOL",ND:"No display"};
+const ST={C:"Complete",N:"Incomplete – No POSM Stock",I:"Incomplete",O:"CTN/EOL"};
+const ST_SHORT={C:"Complete",N:"No POSM Stock",I:"Incomplete",O:"CTN/EOL",ND:"No display"};
 const AV_CHECKS=[["tvbg","TVBG installed"],["spop","SPOP/EPOP playing"]];
 const catOf=k=>{const[bu,code]=k.split("|");return((MODELS[bu]||[]).find(m=>m[0]===code)||[])[2]||""};
 const isTV=k=>k.startsWith("AV|")&&catOf(k)==="VIDEO";
@@ -398,11 +399,17 @@ $("buBtns").onclick=e=>{const b=e.target.closest("button");if(!b)return;sel.bu=b
 const camIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`;
 function renderModels(){
   const box=$("modelList");
+  renderNoDisp();
+  if(!sel.store){box.innerHTML=`<div class="empty">Select a region, TS and store first.</div>`;return;}
+  if(noDisp[sel.bu]){box.innerHTML=`<div class="empty">Marked as <b>no ${sel.bu} display</b> in this store.</div>`;return;}
+  renderList(box);
+}
+function renderNoDisp(){
   const nb=$("noDisp"),nIn=Object.keys(entries).some(k=>k.startsWith(sel.bu+"|"));
   nb.hidden=!sel.store;nb.setAttribute("aria-pressed",!!noDisp[sel.bu]);nb.disabled=nIn;
   nb.textContent=noDisp[sel.bu]?`✓ No ${sel.bu} display in this store (tap to undo)`:nIn?`No ${sel.bu} display (untick the models first)`:`No ${sel.bu} display in this store`;
-  if(!sel.store){box.innerHTML=`<div class="empty">Select a region, TS and store first.</div>`;return;}
-  if(noDisp[sel.bu]){box.innerHTML=`<div class="empty">Marked as <b>no ${sel.bu} display</b> in this store.</div>`;return;}
+}
+function renderList(box){
   const q=$("search").value.trim().toLowerCase();
   let list=MODELS[sel.bu].filter(([c,d,cat])=>!q||(c+" "+d+" "+cat).toLowerCase().includes(q));
   if(onlyOn)list=list.filter(([c])=>entries[sel.bu+"|"+c]);
@@ -410,32 +417,45 @@ function renderModels(){
   let lastCat=null;
   box.innerHTML=list.map(([c,d,cat])=>{
     const hd=cat!==lastCat?`<div class="cathd">${esc(cat||"Others")}</div>`:"";lastCat=cat;
-    const k=sel.bu+"|"+c,en=entries[k],id=c.replace(/[^\w-]/g,"");
+    return hd+rowHtml(c,d,sel.bu);}).join("");
+}
+function rowHtml(c,d,bu){
+    const k=bu+"|"+c,en=entries[k],id=c.replace(/[^\w-]/g,"");
     const cam=en&&NEEDS_PHOTO(en.s)?(en.photo
       ?`<label class="cam done" title="Retake photo"><img src="${en.photo}" alt="Photo of ${esc(c)}">Retake<input type="file" accept="image/*" capture="environment" data-k="${esc(k)}"></label>`
       :`<label class="cam">${camIcon}Photo<input type="file" accept="image/*" capture="environment" data-k="${esc(k)}"></label>`):"";
-    return hd+`<div class="row ${en?"on":""}" data-k="${esc(k)}">
+    return `<div class="row ${en?"on":""}" data-k="${esc(k)}">
       <input type="checkbox" id="cb_${id}" ${en?"checked":""}>
       <label class="mname" for="cb_${id}">${esc(c)}${d?`<small>${esc(d)}</small>`:""}</label>
       ${en?`<div class="detail"><div class="seg">${Object.keys(ST).map(s=>`<button type="button" data-s="${s}" aria-pressed="${en.s===s}">${ST_SHORT[s]}</button>`).join("")}</div>
       ${isTV(k)?`<div class="av">${AV_CHECKS.map(([f,l])=>`<div class="yn"><span>${l}</span>${["Yes","No"].map(v=>`<button type="button" data-f="${f}" data-v="${v}" aria-pressed="${en[f]===v}">${v}</button>`).join("")}</div>`).join("")}</div>`:""}
       <div class="extra">${cam}<input type="text" id="rm_${id}" placeholder="Remarks" value="${esc(en.r)}"></div></div>`:""}
-    </div>`}).join("");
+    </div>`;
+}
+// Fast path: redraw just one model row plus the small summaries (BU buttons, No display button, tally)
+function updateRow(k,focusSel){
+  const el=[...$("modelList").querySelectorAll(".row")].find(r=>r.dataset.k===k);
+  const[bu,code]=k.split("|"),m=(MODELS[bu]||[]).find(x=>x[0]===code);
+  if(!el||!m||(onlyOn&&!entries[k])){renderModels();}
+  else{const miss=el.classList.contains("missing");el.outerHTML=rowHtml(m[0],m[1],bu);
+    const nw=[...$("modelList").querySelectorAll(".row")].find(r=>r.dataset.k===k);
+    if(nw){if(miss&&entries[k])nw.classList.add("missing");if(focusSel){const f=nw.querySelector(focusSel);f&&f.focus({preventScroll:true});}}}
+  renderBU();renderNoDisp();renderTally();
 }
 $("modelList").addEventListener("change",async e=>{
   const t=e.target;
-  if(t.type==="checkbox"){const k=t.closest(".row").dataset.k;if(t.checked)entries[k]={s:"",r:"",photo:""};else delete entries[k];render();return;}
+  if(t.type==="checkbox"){const k=t.closest(".row").dataset.k;if(t.checked)entries[k]={s:"",r:"",photo:""};else delete entries[k];updateRow(k,'input[type=checkbox]');return;}
   if(t.type==="file"&&t.files[0]){const k=t.dataset.k;
     // Live camera only: reject old files (gallery) — photo must be taken within the last 2 minutes
     if(Date.now()-t.files[0].lastModified>120000){toast("Take a new photo with the camera. Old photos aren't accepted.");t.value="";return;}
-    entries[k].photo=await shrink(t.files[0]);entries[k].photoAt=new Date().toISOString();render();}
+    entries[k].photo=await shrink(t.files[0]);entries[k].photoAt=new Date().toISOString();updateRow(k);}
 });
 $("modelList").addEventListener("click",e=>{const y=e.target.closest(".yn button");if(!y)return;
-  entries[y.closest(".row").dataset.k][y.dataset.f]=y.dataset.v;render();});
+  const k=y.closest(".row").dataset.k;entries[k][y.dataset.f]=y.dataset.v;updateRow(k,`.yn button[data-f="${y.dataset.f}"][data-v="${y.dataset.v}"]`);});
 $("modelList").addEventListener("click",e=>{const b=e.target.closest(".seg button");if(!b)return;
-  const k=b.closest(".row").dataset.k;entries[k].s=b.dataset.s;if(!NEEDS_PHOTO(b.dataset.s))entries[k].photo="";render();});
+  const k=b.closest(".row").dataset.k;entries[k].s=b.dataset.s;if(!NEEDS_PHOTO(b.dataset.s))entries[k].photo="";updateRow(k,`.seg button[data-s="${b.dataset.s}"]`);});
 $("modelList").addEventListener("input",e=>{if(e.target.type!=="text")return;entries[e.target.closest(".row").dataset.k].r=e.target.value;});
-$("search").oninput=renderModels;
+let searchT;$("search").oninput=()=>{clearTimeout(searchT);searchT=setTimeout(renderModels,120);};
 $("noDisp").onclick=()=>{if(Object.keys(entries).some(k=>k.startsWith(sel.bu+"|")))return;noDisp[sel.bu]=!noDisp[sel.bu];
   if(noDisp[sel.bu]){const nx=BUS.map(b=>b.k).find(b=>!noDisp[b]&&!Object.keys(entries).some(k=>k.startsWith(b+"|")));if(nx&&nx!==sel.bu)toast(`${sel.bu} marked as no display. Next: ${nx}.`);}
   render();};
@@ -453,7 +473,7 @@ function pct(c){const d=c.C+c.N+c.I;return d?Math.round((c.C+c.N)/d*100):null;}
 
 function renderTally(){
   const v=Object.values(entries),c=counts(v),noPhoto=v.filter(e=>NEEDS_PHOTO(e.s)&&!e.photo).length,avNo=Object.entries(entries).filter(([k,e])=>avMissing(k,e)).length;
-  $("tally").innerHTML=v.length?`<b>${v.length} model${v.length>1?"s":""}</b><b class="c">${c.C} C</b><b class="n">${c.N} NS</b><b class="i">${c.I} I</b>${c.O?`<b class="o">${c.O} CTN/EOL</b>`:""}${c._?`<b>${c._} no status</b>`:""}${noPhoto?`<b class="i">${noPhoto} need photo</b>`:""}${avNo?`<b class="i">${avNo} need TVBG/SPOP</b>`:""}`
+  $("tally").innerHTML=v.length?`<b>${v.length} model${v.length>1?"s":""}</b><b class="c">${c.C} C</b><b class="n">${c.N} No POSM</b><b class="i">${c.I} I</b>${c.O?`<b class="o">${c.O} CTN/EOL</b>`:""}${c._?`<b>${c._} no status</b>`:""}${noPhoto?`<b class="i">${noPhoto} need photo</b>`:""}${avNo?`<b class="i">${avNo} need TVBG/SPOP</b>`:""}`
     :`<b style="color:var(--muted)">No models ticked yet</b>`;
   const un=unanswered();if(sel.store&&un.length)$("tally").innerHTML+=`<b class="i">${un.join(", ")} not answered</b>`;
   $("submit").disabled=!sel.store;
@@ -475,7 +495,7 @@ $("submit").onclick=async()=>{
   if(bad.length){
     sel.bu=bad[0].split("|")[0];onlyOn=false;$("onlyOn").setAttribute("aria-pressed",false);$("onlyOn").textContent="Show checked only";render();
     document.querySelectorAll(".row").forEach(r=>{if(bad.includes(r.dataset.k))r.classList.add("missing")});
-    toast(`${bad.length} model${bad.length>1?"s":""} not finished: add a status, a photo for Incomplete or No Stock, and TVBG and SPOP/EPOP for TVs.`);
+    toast(`${bad.length} model${bad.length>1?"s":""} not finished: add a status, a photo for Incomplete or No POSM Stock, and TVBG and SPOP/EPOP for TVs.`);
     const f=document.querySelector(".row.missing");f&&f.scrollIntoView({block:"center",behavior:"smooth"});return;
   }
   const items=Object.entries(entries).map(([k,e])=>{const[bu,code]=k.split("|");
@@ -526,11 +546,11 @@ function renderHist(){
     return `<div class="rep"><div class="top"><div style="min-width:0"><b>${esc(r.store)}</b><div class="meta">${esc(r.ts)} · ${esc(r.region)} · ${d}</div><div class="meta">Grade <b>${esc(r.grade||"–")}</b> · ${esc(r.prom||"–")}</div>${r.loc?`<div class="meta">📍 ${esc(r.loc)}${r.distM!==""&&r.distM!=null?" · "+r.distM+" m":""}</div>`:""}</div>
       <div class="score" style="color:${col}">${p===null?"–":p+"%"}</div></div>
       <div class="chips"><span class="chip ${r.sync==="sent"?"sent":"pending"}">${r.sync==="sent"?"Sent to Tracker":"Waiting to send"}</span>
-      ${c.C?`<span class="chip C">${c.C} Complete</span>`:""}${c.N?`<span class="chip N">${c.N} No Stock</span>`:""}${c.I?`<span class="chip I">${c.I} Incomplete</span>`:""}${c.O?`<span class="chip O">${c.O} CTN/EOL</span>`:""}</div>
+      ${c.C?`<span class="chip C">${c.C} Complete</span>`:""}${c.N?`<span class="chip N">${c.N} No POSM Stock</span>`:""}${c.I?`<span class="chip I">${c.I} Incomplete</span>`:""}${c.O?`<span class="chip O">${c.O} CTN/EOL</span>`:""}</div>
       ${r.remarks?`<div class="meta">Remarks: ${esc(r.remarks)}</div>`:""}
       <details><summary>View details</summary><div class="tbl"><table><tr><th>BU</th><th>Model</th><th>Status</th><th>TVBG</th><th>SPOP/EPOP</th><th>Photo</th><th>Remarks</th></tr>
       ${r.items.map(i=>`<tr><td>${i.bu}</td><td>${esc(i.code)}</td><td><span class="chip ${i.status}">${ST_SHORT[i.status]}</span></td><td>${i.tvbg||""}</td><td>${i.spop||""}</td><td>${i.photo?`<img src="${i.photo}" alt="">`:""}</td><td>${esc(i.remarks)}</td></tr>`).join("")}</table></div></details></div>`}).join("")
-    :`<div class="step empty">No reports submitted yet. Each store's score will show here: (Complete + No Stock) ÷ (Complete + No Stock + Incomplete). CTN/EOL isn't scored.</div>`;
+    :`<div class="step empty">No reports submitted yet. Each store's score will show here: (Complete + No POSM Stock) ÷ (Complete + No POSM Stock + Incomplete). CTN/EOL isn't scored.</div>`;
 }
 $("copyCsv").onclick=()=>{
   const rows=[["Date","Region","Trade Supervisor","Store","Dealer","Agency","Store Grade","Promoter","BU","Category","Model","Description","Status","TVBG","SPOP/EPOP","Has Photo","Model Remarks","Store Remarks","Sync"]];
