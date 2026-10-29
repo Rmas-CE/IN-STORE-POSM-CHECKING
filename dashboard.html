@@ -5,24 +5,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap">
 <style>
 [hidden]{display:none!important}body{margin:0}img{max-width:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 /* Layout: sticky header + one filter row, then summary (KPI tiles, status mix) before detail (TS table, action list, store results) */
 :root{
-  --bg:#eef3f5; --surface:#ffffff; --surface-2:#f4f8f9; --line:#d6e1e5; --grid:#e6eef1;
-  --fg:#0f2730; --muted:#5b727b; --accent:#0a6f86; --accent-ink:#ffffff; --accent-soft:#dbeff3;
-  --ok:#1e8a4c; --ok-soft:#dff3e7; --warn:#b26b00; --warn-soft:#fbefd9; --bad:#c23b31; --bad-soft:#fbe3e0; --old:#6a6f86; --old-soft:#e8e9f0;
-  --display:"Archivo",system-ui,sans-serif; --body:"Public Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --bg:#F3F4F6; --surface:#FFFFFF; --surface-2:#F7F8FA; --line:#E3E6EB; --grid:#EEF0F3;
+  --fg:#12141A; --muted:#5B6270; --accent:#2A5FD9; --accent-2:#1428A0; --accent-ink:#FFFFFF; --accent-soft:#E7EEFB;
+  --ok:#1E7A1E; --ok-soft:#E7F5E7; --warn:#8A5A00; --warn-soft:#FFF3DE; --bad:#B02A21; --bad-soft:#FBE4E2; --old:#5B6270; --old-soft:#EEF0F3;
+  --shadow:0 1px 2px rgba(15,20,30,.05),0 4px 16px rgba(15,20,30,.06);
+  --display:"Poppins","Inter",system-ui,sans-serif; --body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --mono:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --vs-sticky:44px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#08161b; --surface:#0f2229; --surface-2:#132b33; --line:#21404a; --grid:#1a333c;
-  --fg:#e3eef1; --muted:#8fa8b0; --accent:#34b3cf; --accent-ink:#04151a; --accent-soft:#103a45;
-  --ok:#4fcf86; --ok-soft:#113524; --warn:#f0b04a; --warn-soft:#3a2a0d; --bad:#f2786d; --bad-soft:#3d1916; --old:#a9afc8; --old-soft:#23283a; color-scheme:dark}}
+  --bg:#0F1218; --surface:#171B24; --surface-2:#1D2129; --line:#2A2F3A; --grid:#232833;
+  --fg:#EDEFF4; --muted:#A7AEBD; --accent:#5C74FF; --accent-2:#3D5AFE; --accent-ink:#FFFFFF; --accent-soft:#1B2242;
+  --ok:#3FC98A; --ok-soft:#12291F; --warn:#E3A83B; --warn-soft:#332711; --bad:#F0716C; --bad-soft:#341717; --old:#A9AFC8; --old-soft:#23283A;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#08161b; --surface:#0f2229; --surface-2:#132b33; --line:#21404a; --grid:#1a333c;
-  --fg:#e3eef1; --muted:#8fa8b0; --accent:#34b3cf; --accent-ink:#04151a; --accent-soft:#103a45;
-  --ok:#4fcf86; --ok-soft:#113524; --warn:#f0b04a; --warn-soft:#3a2a0d; --bad:#f2786d; --bad-soft:#3d1916; --old:#a9afc8; --old-soft:#23283a; color-scheme:dark}
+  --bg:#0F1218; --surface:#171B24; --surface-2:#1D2129; --line:#2A2F3A; --grid:#232833;
+  --fg:#EDEFF4; --muted:#A7AEBD; --accent:#5C74FF; --accent-2:#3D5AFE; --accent-ink:#FFFFFF; --accent-soft:#1B2242;
+  --ok:#3FC98A; --ok-soft:#12291F; --warn:#E3A83B; --warn-soft:#332711; --bad:#F0716C; --bad-soft:#341717; --old:#A9AFC8; --old-soft:#23283A;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
@@ -148,13 +152,66 @@ dialog textarea{width:100%;min-height:200px;font:500 12px var(--mono);background
 .dhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20;max-width:90%}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== VaultSync look (same as Inventory, Requests and Scorecard) ===== */
+body{font-family:var(--body);-webkit-font-smoothing:antialiased}
+body::before{background:#000}
+.vs-suite{position:sticky;top:env(safe-area-inset-top,0px);z-index:35;height:44px;display:flex;align-items:center;gap:12px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:linear-gradient(100deg,#000 0%,#0B1B5C 50%,#1428A0 100%);color:#fff;font:600 13px/1 var(--body)}
+.vs-suite a{color:inherit;text-decoration:none}
+.vs-suite .vs-home{display:flex;align-items:center;gap:8px;flex:none;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.01em;padding:4px 2px}
+.vs-suite .vs-home svg{width:26px;height:26px;display:block}
+.vs-suite .vs-home b{font-weight:800;color:#7FD8FF}
+.vs-suite nav{display:flex;gap:2px;margin:0 0 0 auto;overflow-x:auto;scrollbar-width:none;min-width:0}
+.vs-suite nav::-webkit-scrollbar{display:none}
+.vs-suite nav a{padding:9px 11px;border-radius:7px;color:#C7CDEE;white-space:nowrap;font-weight:600}
+.vs-suite nav a:hover{color:#fff;background:rgba(255,255,255,.1)}
+.vs-suite nav a[aria-current="page"]{color:#fff;background:rgba(255,255,255,.16)}
+.vs-suite :focus-visible{outline:2px solid #7FD8FF;outline-offset:1px}
+header{top:calc(var(--vs-sticky) + env(safe-area-inset-top,0px));box-shadow:var(--shadow)}
+@media (max-width:900px){:root{--vs-sticky:0px}.vs-suite{position:relative}}
+@media (max-width:600px){.vs-suite{gap:6px}.vs-suite .vs-home span{display:none}.vs-suite nav a{padding:9px 9px}}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .logo{width:36px;height:36px;flex:none}
+.brand .logo svg{width:36px;height:36px;display:block;filter:drop-shadow(0 4px 10px rgba(20,40,160,.25))}
+.brand h1{font:700 16px var(--display);margin:0;letter-spacing:-.01em}
+.brand small{display:block;font:600 11px var(--body);letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.btn{background:var(--surface);border-radius:7px;font:600 13px var(--body);padding:8px 14px}
+.btn:hover{border-color:#C4C9D2}
+.btn.pri{background:var(--accent-2);border-color:var(--accent-2);color:#fff}
+.btn.pri:hover{background:#0B1B5C;border-color:#0B1B5C}
+.src{font:600 11.5px var(--body)}
+select,.toolbar input,.fld input,.inp,.ta,dialog textarea{background:var(--surface);border-radius:8px}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(42,95,217,.15)}
+input[type=checkbox]{accent-color:var(--accent)}
+.filters label{font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.vtabs{background:none;border:0;border-radius:0;padding:0;gap:2px;overflow-x:auto}
+.vtabs button{border-radius:0;padding:11px 14px;border-bottom:2.5px solid transparent;font:600 13px var(--body);color:var(--muted)}
+.vtabs button:hover{color:var(--fg)}
+.vtabs button[aria-selected="true"]{background:none;color:var(--accent);border-bottom-color:var(--accent)}
+.tile,.card{border-radius:10px;box-shadow:var(--shadow);padding:16px 18px}
+.tile .k,.card h2{font:700 12px var(--body);letter-spacing:1px}
+.card h2 span{font:500 12px var(--body)}
+.tile .v{font:700 28px var(--display)}
+.br .t div,.cov .t div{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+th{letter-spacing:.8px}
+td{border-bottom-color:var(--line)}
+tr.click:hover td,tr.st:hover td{background:rgba(42,95,217,.05)}
+.chips button{border-radius:7px;background:var(--surface)}
+.chips button[aria-pressed="true"]{background:var(--accent-2);border-color:var(--accent-2);color:#fff}
+.note{border:1px solid #EAD3A6}
+.err{border:1px solid #EBC1BD}
+dialog{border-radius:10px;box-shadow:0 20px 50px rgba(10,14,39,.25)}
+dialog::backdrop{background:rgba(10,14,39,.55)}
+.toast{background:#12141A;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 </style>
 
+<div class="vs-suite" role="navigation" aria-label="VaultSync tools"><a class="vs-home" href="https://rmas-ce.github.io/CE-VAULT-SYNC/" aria-label="VaultSync home"><svg viewBox="0 0 248 248" aria-hidden="true" focusable="false"><defs><linearGradient id="vsuET" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B4ED8"/><stop offset=".55" stop-color="#1236B0"/><stop offset="1" stop-color="#0A1F6A"/></linearGradient><linearGradient id="vsuEC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8F6FF"/><stop offset=".5" stop-color="#7EC8FF"/><stop offset="1" stop-color="#4AA6FF"/></linearGradient></defs><rect width="248" height="248" rx="54" fill="url(#vsuET)"/><rect x="6" y="6" width="236" height="236" rx="48" fill="none" stroke="#7EB6FF" stroke-opacity=".28" stroke-width="2"/><g transform="translate(124,124)" fill="none" stroke-linecap="round"><path d="M-52 -28 A62 62 0 0 1 50 -46" stroke="url(#vsuEC)" stroke-width="16"/><path d="M52 28 A62 62 0 0 1 -50 46" stroke="url(#vsuEC)" stroke-width="16"/><path d="M-64 -18 L-52 -42 L-30 -28" fill="#9FD4FF" stroke="none"/><path d="M64 18 L52 42 L30 28" fill="#9FD4FF" stroke="none"/><circle r="44" stroke="#D7ECFF" stroke-width="6"/><circle r="27" stroke="#7EC8FF" stroke-width="5"/><circle r="9" fill="#F4FBFF" stroke="none"/><g stroke="#B9E0FF" stroke-width="4"><path d="M0 -40 v10"/><path d="M0 30 v10"/><path d="M-40 0 h10"/><path d="M30 0 h10"/></g></g></svg><span>Vault<b>Sync</b></span></a><nav><a href="https://rmas-ce.github.io/VS-INVENTORY-MANAGEMENT/">Inventory</a><a href="https://rmas-ce.github.io/VS-REQUEST-FORM/">Requests</a><a href="https://rmas-ce.github.io/VS-TS-GRADING/">Scorecard</a><a href="./dashboard.html" aria-current="page">Execution</a><a href="https://rmas-ce.github.io/CE-VAULT-SYNC/#guides">Guides</a></nav></div>
 <header>
   <div class="wrap">
     <div class="hd">
-      <div class="brand"><small>RMAS · Deployment Tracker</small><b>POSM Execution Dashboard</b></div>
-      <div class="vtabs" role="tablist"><button role="tab" id="vDash" aria-selected="true">Dashboard</button><button role="tab" id="vAdmin" aria-selected="false">Master List</button></div>
+      <div class="brand"><div class="logo"><svg viewBox="0 0 248 248" aria-hidden="true" focusable="false"><defs><linearGradient id="vsbET" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B4ED8"/><stop offset=".55" stop-color="#1236B0"/><stop offset="1" stop-color="#0A1F6A"/></linearGradient><linearGradient id="vsbEC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8F6FF"/><stop offset=".5" stop-color="#7EC8FF"/><stop offset="1" stop-color="#4AA6FF"/></linearGradient></defs><rect width="248" height="248" rx="54" fill="url(#vsbET)"/><rect x="6" y="6" width="236" height="236" rx="48" fill="none" stroke="#7EB6FF" stroke-opacity=".28" stroke-width="2"/><g transform="translate(124,124)" fill="none" stroke-linecap="round"><path d="M-52 -28 A62 62 0 0 1 50 -46" stroke="url(#vsbEC)" stroke-width="16"/><path d="M52 28 A62 62 0 0 1 -50 46" stroke="url(#vsbEC)" stroke-width="16"/><path d="M-64 -18 L-52 -42 L-30 -28" fill="#9FD4FF" stroke="none"/><path d="M64 18 L52 42 L30 28" fill="#9FD4FF" stroke="none"/><circle r="44" stroke="#D7ECFF" stroke-width="6"/><circle r="27" stroke="#7EC8FF" stroke-width="5"/><circle r="9" fill="#F4FBFF" stroke="none"/><g stroke="#B9E0FF" stroke-width="4"><path d="M0 -40 v10"/><path d="M0 30 v10"/><path d="M-40 0 h10"/><path d="M30 0 h10"/></g></g></svg></div><div><h1>POSM Execution Dashboard</h1><small>VaultSync · TS Store Visit Monitoring</small></div></div>
       <div class="act">
         <span class="src" id="src">Sample data</span>
         <button class="btn" id="btnPaste">Paste TS CSV</button>
@@ -171,6 +228,7 @@ dialog textarea{width:100%;min-height:200px;font:500 12px var(--mono);background
       <label>Promoter<select id="fProm"></select></label>
       <label>Agency<select id="fAg"></select></label>
     </div>
+    <div class="vtabs" role="tablist"><button role="tab" id="vDash" aria-selected="true">Dashboard</button><button role="tab" id="vAdmin" aria-selected="false">Master List</button></div>
   </div>
 </header>
 
