@@ -4,9 +4,11 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a6f86">
-<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1A3FC4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" media="print" onload="this.media='all'">
@@ -36,6 +38,7 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 .brand{display:flex;flex-direction:column;min-width:0}
 .brand small{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
 .brand b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em}
+@media (max-width:480px){.brand b{font-size:16px;line-height:1.15}.brand small{font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand svg{width:32px;height:32px}header .wrap{gap:8px}.tabs button{padding:7px 9px}}
 .tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px;flex-shrink:0}
 .tabs button{border:0;background:none;color:var(--muted);font:600 13px var(--body);padding:7px 11px;border-radius:999px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
@@ -162,7 +165,20 @@ td img{width:40px;height:40px;object-fit:cover;border-radius:5px;display:block}
 
 <header>
   <div class="wrap">
-    <div class="brand"><small>Deployment Tracker · TS Report</small><b>POSM Execution Check</b></div>
+    <div class="brand" style="flex-direction:row;align-items:center;gap:10px"><span style="flex:none;line-height:0;filter:drop-shadow(0 3px 8px rgba(20,40,160,.25))"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="38" height="38">
+<defs>
+ <linearGradient id="pecBg" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#2D62E6"/><stop offset=".55" stop-color="#1A3FC4"/><stop offset="1" stop-color="#0F2A8C"/></linearGradient>
+ <linearGradient id="pecPin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4FBFF"/><stop offset=".55" stop-color="#9FD4FF"/><stop offset="1" stop-color="#5AB0FF"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="108" fill="url(#pecBg)"/><rect x="9" y="9" width="494" height="494" rx="100" fill="none" stroke="#6F96FF" stroke-opacity=".45" stroke-width="5"/>
+<g transform="translate(256 256) scale(1.0) translate(-256 -256)">
+ <rect x="128" y="112" width="256" height="314" rx="34" fill="#4D7CF0" fill-opacity=".28" stroke="#C9DBFF" stroke-width="22"/>
+ <rect x="198" y="84" width="116" height="60" rx="18" fill="#E3EEFF"/>
+ <rect x="230" y="100" width="52" height="16" rx="8" fill="#1A3FC4"/>
+ <path d="M256 384C256 384 172 312 172 248a84 84 0 0 1 168 0C340 312 256 384 256 384Z" fill="url(#pecPin)"/>
+ <path d="M218 246l26 26 50-52" fill="none" stroke="#1236B0" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg></span><span style="display:flex;flex-direction:column;min-width:0"><small>Deployment Tracker · TS Report</small><b>POSM Execution Check</b></span></div>
     <div class="tabs" role="tablist">
       <button role="tab" id="tabForm" aria-selected="true">Report</button>
       <button role="tab" id="tabHist" aria-selected="false">Submitted</button>

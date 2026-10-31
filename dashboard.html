@@ -4,6 +4,11 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest-dashboard.json">
+<meta name="theme-color" content="#1A3FC4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" media="print" onload="this.media='all'">
@@ -212,7 +217,20 @@ dialog::backdrop{background:rgba(10,14,39,.55)}
 <header>
   <div class="wrap">
     <div class="hd">
-      <div class="brand"><div class="logo"><svg viewBox="0 0 248 248" aria-hidden="true" focusable="false"><defs><linearGradient id="vsbET" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B4ED8"/><stop offset=".55" stop-color="#1236B0"/><stop offset="1" stop-color="#0A1F6A"/></linearGradient><linearGradient id="vsbEC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8F6FF"/><stop offset=".5" stop-color="#7EC8FF"/><stop offset="1" stop-color="#4AA6FF"/></linearGradient></defs><rect width="248" height="248" rx="54" fill="url(#vsbET)"/><rect x="6" y="6" width="236" height="236" rx="48" fill="none" stroke="#7EB6FF" stroke-opacity=".28" stroke-width="2"/><g transform="translate(124,124)" fill="none" stroke-linecap="round"><path d="M-52 -28 A62 62 0 0 1 50 -46" stroke="url(#vsbEC)" stroke-width="16"/><path d="M52 28 A62 62 0 0 1 -50 46" stroke="url(#vsbEC)" stroke-width="16"/><path d="M-64 -18 L-52 -42 L-30 -28" fill="#9FD4FF" stroke="none"/><path d="M64 18 L52 42 L30 28" fill="#9FD4FF" stroke="none"/><circle r="44" stroke="#D7ECFF" stroke-width="6"/><circle r="27" stroke="#7EC8FF" stroke-width="5"/><circle r="9" fill="#F4FBFF" stroke="none"/><g stroke="#B9E0FF" stroke-width="4"><path d="M0 -40 v10"/><path d="M0 30 v10"/><path d="M-40 0 h10"/><path d="M30 0 h10"/></g></g></svg></div><div><h1>POSM Execution Dashboard</h1><small>VaultSync · TS Store Visit Monitoring</small></div></div>
+      <div class="brand"><div class="logo"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="36" height="36">
+<defs>
+ <linearGradient id="pecBg" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#2D62E6"/><stop offset=".55" stop-color="#1A3FC4"/><stop offset="1" stop-color="#0F2A8C"/></linearGradient>
+ <linearGradient id="pecPin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4FBFF"/><stop offset=".55" stop-color="#9FD4FF"/><stop offset="1" stop-color="#5AB0FF"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="108" fill="url(#pecBg)"/><rect x="9" y="9" width="494" height="494" rx="100" fill="none" stroke="#6F96FF" stroke-opacity=".45" stroke-width="5"/>
+<g transform="translate(256 256) scale(1.0) translate(-256 -256)">
+ <rect x="128" y="112" width="256" height="314" rx="34" fill="#4D7CF0" fill-opacity=".28" stroke="#C9DBFF" stroke-width="22"/>
+ <rect x="198" y="84" width="116" height="60" rx="18" fill="#E3EEFF"/>
+ <rect x="230" y="100" width="52" height="16" rx="8" fill="#1A3FC4"/>
+ <path d="M256 384C256 384 172 312 172 248a84 84 0 0 1 168 0C340 312 256 384 256 384Z" fill="url(#pecPin)"/>
+ <path d="M218 246l26 26 50-52" fill="none" stroke="#1236B0" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg></div><div><h1>POSM Execution Dashboard</h1><small>VaultSync · TS Store Visit Monitoring</small></div></div>
       <div class="act">
         <span class="src" id="src">Sample data</span>
         <button class="btn" id="btnPaste">Paste TS CSV</button>
@@ -936,6 +954,7 @@ function locLine(r){const s=SI[r.store],m=s&&hasGps(s)?` <a class="lnk" href="${
   if(!r.loc)return m?`<div style="font-size:12px">${m}</div>`:"";
   const inside=/^Inside/.test(r.loc);return `<div style="font-size:12px;color:${inside?"var(--ok)":"var(--warn)"}">📍 ${inside?`Nasa store (${r.distM} m)`:"Walang store location, hindi na-check"}${m}</div>`;}
 load();
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 
 </html>

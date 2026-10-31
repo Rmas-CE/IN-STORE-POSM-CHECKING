@@ -1,0 +1,2 @@
+{"id":"./dashboard.html","name":"POSM Execution Dashboard","short_name":"Execution","description":"RMAS dashboard of TS POSM execution reports","start_url":"./dashboard.html","scope":"./","display":"standalone","background_color":"#F3F4F6","theme_color":"#1428A0",
+ "icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
