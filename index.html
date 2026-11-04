@@ -349,14 +349,27 @@ function onGeo(){
   renderGeo();
 }
 function nearestIn(list){return list.filter(s=>storeState(s)==="in").map(s=>({s,d:storeDist(s)})).sort((a,b)=>a.d-b.d)[0]||null;}
+const dayKey=d=>new Date(d).toDateString();
+// Stores this TS already reported today on this phone — never auto-picked again
+const doneToday=ts=>new Set(reports.filter(r=>r.ts===ts&&dayKey(r.at)===dayKey(Date.now())).map(r=>r.store));
+const inRange=list=>list.filter(s=>storeState(s)==="in").map(s=>({s,d:storeDist(s)})).sort((a,b)=>a.d-b.d);
+const myStores=()=>STORES.filter(s=>s[0]===sel.region&&s[1]===sel.ts);
 function autoPick(){
   suggest=null;if(GEO.state!=="ok")return;
-  if(sel.store){const st=storeState(storeInfo());if(st==="in"||st==="nogps"||hasAnswers())return;}
-  const mine=sel.ts?nearestIn(STORES.filter(s=>s[0]===sel.region&&s[1]===sel.ts)):null;
-  const any=nearestIn(STORES);
-  if(mine){if(sel.store!==mine.s[2]){sel.store=mine.s[2];resetEntries(true);}return;}
-  if(any&&!sel.ts){sel.region=any.s[0];sel.ts=any.s[1];sel.store=any.s[2];store("pec_who",{region:sel.region,ts:sel.ts});fillRegion();fillTS();resetEntries(true);return;}
-  if(any)suggest=any.s;
+  // Once a store is selected it stays — GPS drift between two nearby stores must never switch it.
+  if(sel.store)return;
+  if(sel.ts){
+    const mine=inRange(myStores()),done=doneToday(sel.ts),todo=mine.filter(x=>!done.has(x.s[2]));
+    // Auto-select only when it's clear: exactly one of the TS's stores nearby, not reported yet today
+    if(mine.length===1&&todo.length===1){sel.store=todo[0].s[2];resetEntries(true);}
+    if(mine.length)return; // several stores nearby (or all done) → the TS picks from the list
+  }else{
+    const any=inRange(STORES),tss=uniq(any.map(x=>x.s[0]+"|"+x.s[1]));
+    if(tss.length===1){const f=any[0].s;sel.region=f[0];sel.ts=f[1];store("pec_who",{region:sel.region,ts:sel.ts});fillRegion();fillTS();
+      if(any.length===1)sel.store=f[2];resetEntries(true);return;}
+    if(any.length)return;
+  }
+  const near=nearestIn(STORES);if(near)suggest=near.s;
 }
 function renderGeo(){
   const el=$("geo"),acc=GEO.acc?` · GPS ±${Math.round(GEO.acc)} m`:"",btn=`<button type="button" id="geoRetry">Refresh location</button>`;
@@ -365,6 +378,8 @@ function renderGeo(){
   if(GEO.state==="wait"){html=`<span>📍 Finding your location… Make sure your phone's Location is on.</span>`;}
   else if(GEO.state==="denied"){cls="bad";html=`<span><b>Location is blocked.</b> Allow Location for this site in your browser settings, then tap Refresh location. You need it to submit a report.</span>${btn}`;}
   else if(GEO.state==="unsupported"||GEO.state==="error"){cls="bad";html=`<span><b>Can't get your location.</b> Turn on your phone's Location / GPS and try again.</span>${btn}`;}
+  else if(!sel.store&&sel.ts&&inRange(myStores()).length){const m=inRange(myStores()),dn=doneToday(sel.ts),left=m.filter(x=>!dn.has(x.s[2])).length;
+    cls="ok";html=`<span>${left?`<b>${m.length>1?m.length+" of your stores are nearby.":"Your store is nearby."}</b> Choose the store you're in from the Store list.`:`<b>Nearby store${m.length>1?"s":""} already reported today.</b> Go to your next store.`}</span>`;}
   else if(stt==="in"){cls="ok";html=`<span><b>You're at:</b> ${esc(sel.store)} (${fmtDist(storeDist(si))} away${acc})</span>`;}
   else if(stt==="nogps"){html=`<span><b>This store has no location in the list,</b> so your position can't be checked. The report will be flagged for RMAS to verify.</span>`;}
   else if(suggest){html=`<span>None of your stores is within ${RADIUS_M} m. Nearest store: <b>${esc(suggest[2])}</b> (handled by ${esc(suggest[1])}).</span><button type="button" id="geoUse">Use this store</button>`;}
@@ -402,13 +417,13 @@ function fillTS(){const ts=uniq(STORES.filter(s=>s[0]===sel.region).map(s=>s[1])
   $("selTS").innerHTML=`<option value="">Select TS</option>`+ts.map(t=>`<option>${esc(t)}</option>`).join("");$("selTS").disabled=!sel.region;$("selTS").value=sel.ts;}
 const ORDER={in:0,nogps:1,unknown:2,out:3};
 function fillStore(){
-  const v=visitedThisMonth(sel.ts);
+  const v=visitedThisMonth(sel.ts),dn=doneToday(sel.ts);
   const st=STORES.filter(s=>s[0]===sel.region&&s[1]===sel.ts).map(s=>({s,st:storeState(s),d:storeDist(s)}))
     .sort((a,b)=>ORDER[a.st]-ORDER[b.st]||(a.d??1e12)-(b.d??1e12)||a.s[2].localeCompare(b.s[2]));
   if(!st.some(x=>x.s[2]===sel.store)&&!hasAnswers())sel.store=""; // never drop the store while the TS is answering
   $("selStore").innerHTML=`<option value="">Select store</option>`+st.map(x=>{
     const ok=x.st==="in"||x.st==="nogps",tag=x.st==="in"?` · ${fmtDist(x.d)} ✔`:x.st==="out"?` · ${fmtDist(x.d)}`:x.st==="nogps"?" · no store location":"";
-    return `<option value="${esc(x.s[2])}"${ok?"":" disabled"}>${v.has(x.s[2])?"✓ ":""}${esc(x.s[2])}${tag}</option>`}).join("");
+    return `<option value="${esc(x.s[2])}"${ok?"":" disabled"}>${v.has(x.s[2])?"✓ ":""}${esc(x.s[2])}${tag}${dn.has(x.s[2])?" · done today":""}</option>`}).join("");
   $("selStore").disabled=!sel.ts;$("selStore").value=sel.store;
   const si=storeInfo();$("addr").hidden=!si[7];$("addr").textContent=si[7]?"📍 "+si[7]:"";
 }
