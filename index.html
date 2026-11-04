@@ -272,12 +272,21 @@ const avMissing=(k,e)=>isTV(k)&&(!e.tvbg||!e.spop);
 const NEEDS_PHOTO=s=>s==="N"||s==="I";
 
 /* ===== OFFLINE STORAGE (IndexedDB, with in-memory fallback) ===== */
-const DB=(()=>{let mem=[],db=null;
-  const open=()=>new Promise(res=>{try{const r=indexedDB.open("pec",1);r.onupgradeneeded=()=>r.result.createObjectStore("reports",{keyPath:"id"});r.onsuccess=()=>{db=r.result;res()};r.onerror=()=>res()}catch(e){res()}});
-  const tx=(m,fn)=>new Promise(res=>{try{const t=db.transaction("reports",m);const q=fn(t.objectStore("reports"));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>res(null)}catch(e){res(null)}});
+// v2 adds a "draft" store: the unfinished form is auto-saved so answers survive a page reload
+// (Android often reloads the page after the camera opens, or when the TS switches apps).
+const DB=(()=>{let mem=[],memDraft=null,db=null;
+  const open=()=>new Promise(res=>{try{const r=indexedDB.open("pec",2);
+    r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains("reports"))d.createObjectStore("reports",{keyPath:"id"});if(!d.objectStoreNames.contains("draft"))d.createObjectStore("draft",{keyPath:"id"});};
+    r.onsuccess=()=>{db=r.result;res()};r.onerror=()=>res();r.onblocked=()=>res()}catch(e){res()}});
+  // Resolves true only when the write is really committed (handles error AND abort, e.g. storage full)
+  const tx=(name,m,fn)=>new Promise(res=>{try{const t=db.transaction(name,m);const q=fn(t.objectStore(name));
+    t.oncomplete=()=>res(m==="readonly"?(q&&q.result):true);t.onerror=()=>res(m==="readonly"?null:false);t.onabort=()=>res(m==="readonly"?null:false)}catch(e){res(m==="readonly"?null:false)}});
   return{ready:open(),
-    all:async()=>db?((await tx("readonly",s=>s.getAll()))||[]):mem.slice(),
-    put:async r=>{if(db)await tx("readwrite",s=>s.put(r));else{mem=mem.filter(x=>x.id!==r.id);mem.push(r)}}};
+    all:async()=>db?((await tx("reports","readonly",s=>s.getAll()))||[]):mem.slice(),
+    put:async r=>{if(db)return await tx("reports","readwrite",s=>s.put(r));mem=mem.filter(x=>x.id!==r.id);mem.push(r);return true;},
+    getDraft:async()=>db?((await tx("draft","readonly",s=>s.get("cur")))||null):memDraft,
+    putDraft:async d=>{if(db)return await tx("draft","readwrite",s=>s.put(Object.assign({id:"cur"},d)));memDraft=d;return true;},
+    clearDraft:async()=>{if(db)return await tx("draft","readwrite",s=>s.delete("cur"));memDraft=null;return true;}};
 })();
 
 /* ===== STATE ===== */
@@ -287,6 +296,7 @@ const GRADES=["A","B","C","D"],PROMS=["With Promoter","NPS"];
 let entries={}; // "BU|code" -> {s,r,photo}
 let noDisp={}; // BU -> true when the store has no display for that BU
 let onlyOn=false;
+let submitting=false; // blocks double-tap on Submit
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const uniq=a=>[...new Set(a)];
@@ -320,7 +330,7 @@ function onGeo(){
 function nearestIn(list){return list.filter(s=>storeState(s)==="in").map(s=>({s,d:storeDist(s)})).sort((a,b)=>a.d-b.d)[0]||null;}
 function autoPick(){
   suggest=null;if(GEO.state!=="ok")return;
-  if(sel.store){const st=storeState(storeInfo());if(st==="in"||st==="nogps"||Object.keys(entries).length)return;}
+  if(sel.store){const st=storeState(storeInfo());if(st==="in"||st==="nogps"||hasAnswers())return;}
   const mine=sel.ts?nearestIn(STORES.filter(s=>s[0]===sel.region&&s[1]===sel.ts)):null;
   const any=nearestIn(STORES);
   if(mine){if(sel.store!==mine.s[2]){sel.store=mine.s[2];resetEntries(true);}return;}
@@ -343,7 +353,7 @@ function renderGeo(){
 }
 $("geo").addEventListener("click",e=>{
   if(e.target.id==="geoRetry")startGeo();
-  if(e.target.id==="geoUse"&&suggest){sel.region=suggest[0];sel.ts=suggest[1];sel.store=suggest[2];store("pec_who",{region:sel.region,ts:sel.ts});suggest=null;fillRegion();fillTS();fillStore();resetEntries();}
+  if(e.target.id==="geoUse"&&suggest&&confirmDiscard()){sel.region=suggest[0];sel.ts=suggest[1];sel.store=suggest[2];store("pec_who",{region:sel.region,ts:sel.ts});suggest=null;fillRegion();fillTS();fillStore();resetEntries();}
 });
 
 /* ===== MASTER LIST (Store / TS / Model) from Google Sheet, cached for offline ===== */
@@ -356,7 +366,9 @@ async function loadMaster(){
   if(!SYNC_URL||!navigator.onLine)return;
   try{
     const j=await (await fetch(SYNC_URL+"?action=master")).json();
-    if(j&&j.ok&&(j.stores||j.models)){store("pec_master",{stores:j.stores,models:j.models});applyMaster(j);geoSig="";fillRegion();fillTS();onGeo();fillStore();render();}
+    if(j&&j.ok&&(j.stores||j.models)){store("pec_master",{stores:j.stores,models:j.models});
+      if(hasAnswers())return; // TS is mid-report: use the new list next time the form opens, don't reset the form now
+      applyMaster(j);geoSig="";fillRegion();fillTS();onGeo();fillStore();render();}
   }catch(e){}
 }
 const visitedThisMonth=ts=>new Set(reports.filter(r=>r.ts===ts&&monthKey(r.at)===monthKey(Date.now())).map(r=>r.store));
@@ -371,16 +383,17 @@ function fillStore(){
   const v=visitedThisMonth(sel.ts);
   const st=STORES.filter(s=>s[0]===sel.region&&s[1]===sel.ts).map(s=>({s,st:storeState(s),d:storeDist(s)}))
     .sort((a,b)=>ORDER[a.st]-ORDER[b.st]||(a.d??1e12)-(b.d??1e12)||a.s[2].localeCompare(b.s[2]));
-  if(!st.some(x=>x.s[2]===sel.store))sel.store="";
+  if(!st.some(x=>x.s[2]===sel.store)&&!hasAnswers())sel.store=""; // never drop the store while the TS is answering
   $("selStore").innerHTML=`<option value="">Select store</option>`+st.map(x=>{
     const ok=x.st==="in"||x.st==="nogps",tag=x.st==="in"?` · ${fmtDist(x.d)} ✔`:x.st==="out"?` · ${fmtDist(x.d)}`:x.st==="nogps"?" · no store location":"";
     return `<option value="${esc(x.s[2])}"${ok?"":" disabled"}>${v.has(x.s[2])?"✓ ":""}${esc(x.s[2])}${tag}</option>`}).join("");
   $("selStore").disabled=!sel.ts;$("selStore").value=sel.store;
   const si=storeInfo();$("addr").hidden=!si[7];$("addr").textContent=si[7]?"📍 "+si[7]:"";
 }
-$("selRegion").onchange=e=>{sel.region=e.target.value;sel.ts="";sel.store="";fillTS();fillStore();resetEntries();};
-$("selTS").onchange=e=>{sel.ts=e.target.value;store("pec_who",{region:sel.region,ts:sel.ts});sel.store="";autoPick();fillStore();resetEntries();};
-$("selStore").onchange=e=>{sel.store=e.target.value;fillStore();resetEntries();};
+$("selRegion").onchange=e=>{if(!confirmDiscard()){e.target.value=sel.region;return;}sel.region=e.target.value;sel.ts="";sel.store="";entries={};noDisp={};fillTS();fillStore();resetEntries();};
+$("selTS").onchange=e=>{if(!confirmDiscard()){e.target.value=sel.ts;return;}sel.ts=e.target.value;store("pec_who",{region:sel.region,ts:sel.ts});sel.store="";entries={};noDisp={};$("storeRemarks").value="";autoPick();fillStore();resetEntries();};
+$("selStore").onchange=e=>{if(e.target.value===sel.store)return;if(!confirmDiscard()){e.target.value=sel.store;return;}sel.store=e.target.value;fillStore();resetEntries();};
+$("storeRemarks").addEventListener("input",saveDraft);
 
 function renderCoverage(){
   const box=$("cov");if(!sel.ts){box.hidden=true;return;}
@@ -396,13 +409,36 @@ function renderCoverage(){
 function resetEntries(keep){entries={};noDisp={};$("storeRemarks").value="";
   const last=[...reports].sort((a,b)=>b.id-a.id).find(r=>r.store===sel.store);
   sel.grade=last?.grade||"";sel.prom=last?.prom||"";$("prof").classList.remove("missing");render();}
+
+/* ===== DRAFT AUTO-SAVE (answers survive reloads / camera / app switching) ===== */
+const hasAnswers=()=>Object.keys(entries).length>0||Object.keys(noDisp).some(b=>noDisp[b])||!!$("storeRemarks").value.trim();
+let draftT=null,draftReady=false;
+function saveDraft(){if(!draftReady)return;clearTimeout(draftT);draftT=setTimeout(async()=>{
+  if(!sel.store||!hasAnswers()){await DB.clearDraft();return;}
+  const ok=await DB.putDraft({sel:{...sel},entries,noDisp,remarks:$("storeRemarks").value,at:Date.now()});
+  if(!ok&&!saveDraft.warned){saveDraft.warned=true;toast("Phone storage is full. Answers can't be auto-saved — free up space.");}
+},300);}
+async function restoreDraft(){
+  const d=await DB.getDraft();
+  // Only restore same-day drafts for a store that still exists in the list
+  if(!d||!d.sel||!d.sel.store||Date.now()-(d.at||0)>12*3600e3||!STORES.some(s=>s[0]===d.sel.region&&s[1]===d.sel.ts&&s[2]===d.sel.store)){await DB.clearDraft();return false;}
+  sel={...sel,...d.sel};entries=d.entries||{};noDisp=d.noDisp||{};
+  fillRegion();$("selRegion").value=sel.region;fillTS();fillStore();
+  if(sel.store!==d.sel.store){sel.store=d.sel.store;$("selStore").value=sel.store;} // keep even if GPS hasn't locked yet
+  $("storeRemarks").value=d.remarks||"";
+  toast(`Your unfinished report for ${sel.store} was restored.`);return true;
+}
+// Ask before throwing away answers when the TS changes Region / TS / Store
+function confirmDiscard(){return !hasAnswers()||confirm(`You have unsent answers for ${sel.store}. Switch and clear them?`);}
+addEventListener("beforeunload",e=>{if(hasAnswers()){e.preventDefault();e.returnValue="";}});
+addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&draftReady&&sel.store&&hasAnswers())DB.putDraft({sel:{...sel},entries,noDisp,remarks:$("storeRemarks").value,at:Date.now()});});
 function renderProfile(){
   $("prof").hidden=!sel.store;
   $("pickGrade").innerHTML=GRADES.map(g=>`<button type="button" data-v="${g}" aria-pressed="${sel.grade===g}">${g}</button>`).join("");
   $("pickProm").innerHTML=PROMS.map(g=>`<button type="button" data-v="${g}" aria-pressed="${sel.prom===g}">${g}</button>`).join("");
 }
-$("pickGrade").onclick=e=>{const b=e.target.closest("button");if(!b)return;sel.grade=b.dataset.v;renderProfile();};
-$("pickProm").onclick=e=>{const b=e.target.closest("button");if(!b)return;sel.prom=b.dataset.v;renderProfile();};
+$("pickGrade").onclick=e=>{const b=e.target.closest("button");if(!b)return;sel.grade=b.dataset.v;renderProfile();saveDraft();};
+$("pickProm").onclick=e=>{const b=e.target.closest("button");if(!b)return;sel.prom=b.dataset.v;renderProfile();saveDraft();};
 
 /* ===== BU + MODELS ===== */
 function renderBU(){
@@ -470,7 +506,7 @@ $("modelList").addEventListener("click",e=>{const y=e.target.closest(".yn button
   const k=y.closest(".row").dataset.k;entries[k][y.dataset.f]=y.dataset.v;updateRow(k,`.yn button[data-f="${y.dataset.f}"][data-v="${y.dataset.v}"]`);});
 $("modelList").addEventListener("click",e=>{const b=e.target.closest(".seg button");if(!b)return;
   const k=b.closest(".row").dataset.k;entries[k].s=b.dataset.s;if(!NEEDS_PHOTO(b.dataset.s))entries[k].photo="";updateRow(k,`.seg button[data-s="${b.dataset.s}"]`);});
-$("modelList").addEventListener("input",e=>{if(e.target.type!=="text")return;entries[e.target.closest(".row").dataset.k].r=e.target.value;});
+$("modelList").addEventListener("input",e=>{if(e.target.type!=="text")return;entries[e.target.closest(".row").dataset.k].r=e.target.value;saveDraft();});
 let searchT;$("search").oninput=()=>{clearTimeout(searchT);searchT=setTimeout(renderModels,120);};
 $("noDisp").onclick=()=>{if(Object.keys(entries).some(k=>k.startsWith(sel.bu+"|")))return;noDisp[sel.bu]=!noDisp[sel.bu];
   if(noDisp[sel.bu]){const nx=BUS.map(b=>b.k).find(b=>!noDisp[b]&&!Object.keys(entries).some(k=>k.startsWith(b+"|")));if(nx&&nx!==sel.bu)toast(`${sel.bu} marked as no display. Next: ${nx}.`);}
@@ -492,7 +528,8 @@ function renderTally(){
   $("tally").innerHTML=v.length?`<b>${v.length} model${v.length>1?"s":""}</b><b class="c">${c.C} C</b><b class="n">${c.N} No POSM</b><b class="i">${c.I} I</b>${c.O?`<b class="o">${c.O} CTN/EOL</b>`:""}${c._?`<b>${c._} no status</b>`:""}${noPhoto?`<b class="i">${noPhoto} need photo</b>`:""}${avNo?`<b class="i">${avNo} need TVBG/SPOP</b>`:""}`
     :`<b style="color:var(--muted)">No models ticked yet</b>`;
   const un=unanswered();if(sel.store&&un.length)$("tally").innerHTML+=`<b class="i">${un.join(", ")} not answered</b>`;
-  $("submit").disabled=!sel.store;
+  $("submit").disabled=!sel.store||submitting;
+  saveDraft();
 }
 function unanswered(){return BUS.map(b=>b.k).filter(b=>!noDisp[b]&&!Object.keys(entries).some(k=>k.startsWith(b+"|")));}
 function render(){renderGeo();renderProfile();renderCoverage();renderBU();renderModels();renderTally();}
@@ -500,6 +537,7 @@ function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTime
 
 /* ===== SUBMIT ===== */
 $("submit").onclick=async()=>{
+  if(submitting)return;
   const si=storeInfo(),stt=storeState(si);
   if(stt==="out"||stt==="unknown"){renderGeo();$("geo").scrollIntoView({block:"center",behavior:"smooth"});
     toast(GEO.state==="ok"?`Can't submit: you're ${fmtDist(storeDist(si))} from the store. You must be within ${RADIUS_M} m.`:"Can't submit: your location is needed. Turn on Location and tap Refresh location.");return;}
@@ -520,11 +558,28 @@ $("submit").onclick=async()=>{
   const rep={id:Date.now(),at:new Date().toISOString(),region:sel.region,ts:sel.ts,store:sel.store,dealer:storeInfo()[3]||"",agency:storeInfo()[4]||"",grade:sel.grade,prom:sel.prom,remarks:$("storeRemarks").value.trim(),items,sync:"pending",
     loc:stt==="in"?`Inside ${RADIUS_M}m`:"No store location",distM:stt==="in"?Math.round(storeDist(si)):"",
     gpsLat:GEO.state==="ok"?+GEO.lat.toFixed(6):"",gpsLng:GEO.state==="ok"?+GEO.lng.toFixed(6):"",gpsAcc:GEO.state==="ok"?Math.round(GEO.acc):""};
-  await DB.put(rep);reports=await DB.all();
+  submitting=true;$("submit").disabled=true;
   const storeName=sel.store;
+  // 1) Save on the phone first. Only clear the form once the report is safely stored somewhere.
+  let saved=await DB.put(rep);
+  if(!saved&&navigator.onLine&&SYNC_URL){ // phone storage failed (e.g. full) — try sending straight away instead
+    toast(`Sending the report for ${storeName}…`);
+    saved=(await sendReport(rep))==="sent";
+  }
+  if(!saved){submitting=false;renderTally();
+    alert(`The report for ${storeName} could NOT be saved or sent.\n\nYour answers are still on the screen — don't close this page. Free up phone storage or get signal, then tap Submit again.`);return;}
+  reports=await DB.all();
+  // 2) Clear the form and the draft
+  entries={};noDisp={};$("storeRemarks").value="";await DB.clearDraft();
   sel.store="";autoPick();fillStore();resetEntries();renderGeo();window.scrollTo({top:0,behavior:"smooth"});
-  toast(navigator.onLine&&SYNC_URL?`Sending the report for ${storeName}…`:`Report for ${storeName} saved on this phone. It will be sent when you have signal.`);
-  syncAll();
+  submitting=false;renderTally();
+  // 3) Send, and tell the TS clearly whether RMAS received it
+  if(!(navigator.onLine&&SYNC_URL)){toast(`Report for ${storeName} saved on this phone. It will be sent when you have signal.`);updateNet();return;}
+  toast(`Sending the report for ${storeName}…`);
+  await syncAll();
+  const r=reports.find(x=>x.id===rep.id);
+  if(!r||r.sync==="sent")toast(`✓ Report for ${storeName} sent to RMAS.`);
+  else toast(`Report for ${storeName} is saved on this phone but NOT sent yet. It will retry automatically — check the History tab.`);
 };
 
 /* ===== SYNC (offline queue → Deployment Tracker) ===== */
@@ -533,14 +588,29 @@ async function syncAll(){
   reports=await DB.all();
   if(syncing||!navigator.onLine||!SYNC_URL){updateNet();return;}
   syncing=true;
-  for(const r of reports.filter(x=>x.sync!=="sent")){
-    try{
-      const res=await fetch(SYNC_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"tsExecutionReport",report:r})});
-      const j=await res.json().catch(()=>({}));
-      if(res.ok&&j.ok!==false){r.sync="sent";r.sentAt=new Date().toISOString();await DB.put(r);}
-    }catch(e){break}
-  }
-  syncing=false;reports=await DB.all();updateNet();if(!$("histView").hidden)renderHist();
+  try{
+    for(const r of reports.filter(x=>x.sync!=="sent")){
+      const res=await sendReport(r);
+      if(res==="sent"){r.sync="sent";r.sentAt=new Date().toISOString();r.lastError="";
+        // Photos are already with RMAS: drop them from the phone so storage doesn't fill up
+        r.items.forEach(i=>{if(i.photo){i.photo="";i.hadPhoto=true;}});
+        await DB.put(r);}
+      else{r.lastError=res;await DB.put(r);if(res==="network")break;}
+    }
+  }finally{syncing=false;}
+  reports=await DB.all();updateNet();if(!$("histView").hidden)renderHist();
+}
+// "sent" | "network" (no signal / timeout) | server error text
+async function sendReport(r){
+  const ctl=typeof AbortController!=="undefined"?new AbortController():null,tm=ctl&&setTimeout(()=>ctl.abort(),90000);
+  try{
+    const res=await fetch(SYNC_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"tsExecutionReport",report:r}),signal:ctl?ctl.signal:undefined});
+    const txt=await res.text();let j=null;try{j=JSON.parse(txt)}catch(e){}
+    // Require a real JSON {ok:true}-style answer — an HTML error page from Google is NOT a success
+    if(res.ok&&j&&j.ok!==false&&!j.error)return"sent";
+    return(j&&(j.error||j.message))||("Server error "+res.status);
+  }catch(e){return"network";}
+  finally{tm&&clearTimeout(tm);}
 }
 function updateNet(){
   const pend=reports.filter(r=>r.sync!=="sent").length,on=navigator.onLine;
@@ -561,16 +631,16 @@ function renderHist(){
     const d=new Date(r.at).toLocaleString("en-PH",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
     return `<div class="rep"><div class="top"><div style="min-width:0"><b>${esc(r.store)}</b><div class="meta">${esc(r.ts)} · ${esc(r.region)} · ${d}</div><div class="meta">Grade <b>${esc(r.grade||"–")}</b> · ${esc(r.prom||"–")}</div>${r.loc?`<div class="meta">📍 ${esc(r.loc)}${r.distM!==""&&r.distM!=null?" · "+r.distM+" m":""}</div>`:""}</div>
       <div class="score" style="color:${col}">${p===null?"–":p+"%"}</div></div>
-      <div class="chips"><span class="chip ${r.sync==="sent"?"sent":"pending"}">${r.sync==="sent"?"Sent to Tracker":"Waiting to send"}</span>
+      <div class="chips"><span class="chip ${r.sync==="sent"?"sent":"pending"}">${r.sync==="sent"?"Sent to RMAS":"Not sent yet – waiting to send"}</span>${r.sync!=="sent"&&r.lastError&&r.lastError!=="network"?`<span class="chip I">${esc(r.lastError)}</span>`:""}
       ${c.C?`<span class="chip C">${c.C} Complete</span>`:""}${c.N?`<span class="chip N">${c.N} No POSM Stock</span>`:""}${c.I?`<span class="chip I">${c.I} Incomplete</span>`:""}${c.O?`<span class="chip O">${c.O} CTN/EOL</span>`:""}</div>
       ${r.remarks?`<div class="meta">Remarks: ${esc(r.remarks)}</div>`:""}
       <details><summary>View details</summary><div class="tbl"><table><tr><th>BU</th><th>Model</th><th>Status</th><th>TVBG</th><th>SPOP/EPOP</th><th>Photo</th><th>Remarks</th></tr>
-      ${r.items.map(i=>`<tr><td>${i.bu}</td><td>${esc(i.code)}</td><td><span class="chip ${i.status}">${ST_SHORT[i.status]}</span></td><td>${i.tvbg||""}</td><td>${i.spop||""}</td><td>${i.photo?`<img src="${i.photo}" alt="">`:""}</td><td>${esc(i.remarks)}</td></tr>`).join("")}</table></div></details></div>`}).join("")
+      ${r.items.map(i=>`<tr><td>${i.bu}</td><td>${esc(i.code)}</td><td><span class="chip ${i.status}">${ST_SHORT[i.status]}</span></td><td>${i.tvbg||""}</td><td>${i.spop||""}</td><td>${i.photo?`<img src="${i.photo}" alt="">`:i.hadPhoto?"Sent":""}</td><td>${esc(i.remarks)}</td></tr>`).join("")}</table></div></details></div>`}).join("")
     :`<div class="step empty">No reports submitted yet. Each store's score will show here: (Complete + No POSM Stock) ÷ (Complete + No POSM Stock + Incomplete). CTN/EOL isn't scored.</div>`;
 }
 $("copyCsv").onclick=()=>{
   const rows=[["Date","Region","Trade Supervisor","Store","Dealer","Agency","Store Grade","Promoter","BU","Category","Model","Description","Status","TVBG","SPOP/EPOP","Has Photo","Model Remarks","Store Remarks","Sync"]];
-  reports.forEach(r=>r.items.forEach(i=>rows.push([r.at,r.region,r.ts,r.store,r.dealer||"",r.agency||"",r.grade||"",r.prom||"",i.bu,i.cat||"",i.code,i.desc,ST[i.status]||ST_SHORT[i.status]||i.status,i.tvbg||"",i.spop||"",i.photo?"Yes":"",i.remarks,r.remarks,r.sync])));
+  reports.forEach(r=>r.items.forEach(i=>rows.push([r.at,r.region,r.ts,r.store,r.dealer||"",r.agency||"",r.grade||"",r.prom||"",i.bu,i.cat||"",i.code,i.desc,ST[i.status]||ST_SHORT[i.status]||i.status,i.tvbg||"",i.spop||"",(i.photo||i.hadPhoto)?"Yes":"",i.remarks,r.remarks,r.sync])));
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   navigator.clipboard.writeText(csv).then(()=>toast("Copied. Paste it into Excel or Google Sheets."),()=>toast("Can't copy on this device."));
 };
@@ -587,6 +657,7 @@ $("tabForm").onclick=()=>tab(false);$("tabHist").onclick=()=>tab(true);
   sel.bu="AV";
   const saved=store("pec_who")||{};
   if(saved.region&&STORES.some(s=>s[0]===saved.region&&s[1]===saved.ts)){sel.region=saved.region;sel.ts=saved.ts;$("selRegion").value=sel.region;fillTS();fillStore();}
+  await restoreDraft();draftReady=true;
   render();updateNet();syncAll();
   startGeo();loadMaster();
 })();
