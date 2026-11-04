@@ -308,18 +308,39 @@ const storeInfo=()=>STORES.find(s=>s[0]===sel.region&&s[1]===sel.ts&&s[2]===sel.
 let GEO={state:"wait",lat:null,lng:null,acc:null};
 const rad=d=>d*Math.PI/180;
 function distM(a,b,c,d){const h=Math.sin(rad(c-a)/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(rad(d-b)/2)**2;return 2*6371000*Math.asin(Math.sqrt(h));}
-const hasGps=s=>!!s&&s[5]!==""&&s[5]!=null&&s[6]!==""&&s[6]!=null&&!isNaN(+s[5])&&!isNaN(+s[6]);
-const storeDist=s=>GEO.state==="ok"&&hasGps(s)?distM(GEO.lat,GEO.lng,+s[5],+s[6]):null;
+const num=v=>{if(v===""||v==null)return NaN;return +String(v).trim().replace(",",".")};
+// Returns [lat,lng] or null. Fixes swapped columns; coords outside the Philippines are treated as missing.
+function coordOf(s){if(!s)return null;let a=num(s[5]),b=num(s[6]);if(isNaN(a)||isNaN(b))return null;
+  if(a>100&&b<30)[a,b]=[b,a];
+  return(a>=4&&a<=22&&b>=116&&b<=127)?[a,b]:null;}
+const hasGps=s=>!!coordOf(s);
+const storeDist=s=>{const c=coordOf(s);return GEO.state==="ok"&&c?distM(GEO.lat,GEO.lng,c[0],c[1]):null};
+// GPS inside malls is often off by 50–300 m. Allow the phone's reported accuracy on top of the radius (capped).
+const ACC_TOL=200;
+const radiusNow=()=>RADIUS_M+Math.min(GEO.acc||0,ACC_TOL);
 // in = nasa loob ng radius · out = malayo · nogps = walang location ang store sa list · unknown = wala pang GPS ng phone
-function storeState(s){if(!hasGps(s))return"nogps";if(GEO.state!=="ok")return"unknown";return storeDist(s)<=RADIUS_M?"in":"out";}
+function storeState(s){if(!hasGps(s))return"nogps";if(GEO.state!=="ok")return"unknown";return storeDist(s)<=radiusNow()?"in":"out";}
 const fmtDist=m=>m==null?"":m<1000?Math.round(m)+" m":(m/1000).toFixed(m<10000?1:0)+" km";
 let geoSig="",suggest=null;
 function startGeo(){
   if(!("geolocation" in navigator)){GEO.state="unsupported";onGeo();return;}
   if(startGeo.id!=null)navigator.geolocation.clearWatch(startGeo.id);
   GEO.state=GEO.state==="ok"?"ok":"wait";renderGeo();
-  startGeo.id=navigator.geolocation.watchPosition(p=>{GEO={state:"ok",lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy,at:Date.now()};onGeo();},
-    e=>{if(GEO.state!=="ok"){GEO.state=e.code===1?"denied":"error";onGeo();}},{enableHighAccuracy:true,maximumAge:15000,timeout:25000});
+  startGeo.id=navigator.geolocation.watchPosition(gotPos,geoErr,{enableHighAccuracy:true,maximumAge:15000,timeout:25000});
+  // Indoors the GPS chip often can't get a fix at all — also ask for Wi-Fi / cell-tower location
+  navigator.geolocation.getCurrentPosition(gotPos,()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:20000});
+}
+// Keep the best recent fix: a new reading replaces the current one if it is more accurate,
+// or the current one is older than 45 s (so moving to another store still updates).
+function gotPos(p){const c=p.coords,now=Date.now();
+  if(GEO.state==="ok"&&GEO.at&&now-GEO.at<45000&&c.accuracy>GEO.acc*1.5&&c.accuracy>RADIUS_M)return;
+  GEO={state:"ok",lat:c.latitude,lng:c.longitude,acc:c.accuracy,at:now};onGeo();}
+function geoErr(e){
+  if(e.code===1){GEO.state="denied";onGeo();return;}
+  if(GEO.state!=="ok"){GEO.state="error";onGeo();}
+  // Timeout / no signal: try again with network location, and restart the watch in a bit
+  navigator.geolocation.getCurrentPosition(gotPos,()=>{},{enableHighAccuracy:false,maximumAge:120000,timeout:20000});
+  clearTimeout(geoErr.t);geoErr.t=setTimeout(startGeo,15000);
 }
 function onGeo(){
   // Refill the store list only when which stores are inside the radius changes (keeps the dropdown steady)
@@ -347,6 +368,7 @@ function renderGeo(){
   else if(stt==="in"){cls="ok";html=`<span><b>You're at:</b> ${esc(sel.store)} (${fmtDist(storeDist(si))} away${acc})</span>`;}
   else if(stt==="nogps"){html=`<span><b>This store has no location in the list,</b> so your position can't be checked. The report will be flagged for RMAS to verify.</span>`;}
   else if(suggest){html=`<span>None of your stores is within ${RADIUS_M} m. Nearest store: <b>${esc(suggest[2])}</b> (handled by ${esc(suggest[1])}).</span><button type="button" id="geoUse">Use this store</button>`;}
+  else if(GEO.acc>ACC_TOL+RADIUS_M){cls="bad";html=`<span><b>Your GPS signal is weak (±${Math.round(GEO.acc)} m),</b> so the app can't tell which store you're in. Turn on Wi-Fi and Location (High accuracy), step near the entrance or a window, then tap Refresh location.</span>${btn}`;}
   else{const near=STORES.filter(s=>(!sel.ts||s[1]===sel.ts)&&hasGps(s)).map(s=>({s,d:storeDist(s)})).sort((a,b)=>a.d-b.d)[0];
     cls="bad";html=`<span><b>You're not within ${RADIUS_M} m of a store.</b>${near?` Nearest: ${esc(near.s[2])} (${fmtDist(near.d)}).`:""} You can report once you're at the store.${acc}</span>${btn}`;}
   el.className="geo "+cls;el.innerHTML=html;
@@ -359,7 +381,7 @@ $("geo").addEventListener("click",e=>{
 /* ===== MASTER LIST (Store / TS / Model) from Google Sheet, cached for offline ===== */
 function applyMaster(m){
   if(!m)return;
-  if(Array.isArray(m.stores)&&m.stores.length)STORES=m.stores;
+  if(Array.isArray(m.stores)&&m.stores.length)STORES=m.stores.map(r=>{const x=r.slice();x[0]=String(x[0]??"").trim().toUpperCase();x[1]=String(x[1]??"").trim();x[2]=String(x[2]??"").trim();return x;});
   if(m.models&&typeof m.models==="object")MODELS=Object.assign({},MODELS,m.models);
 }
 async function loadMaster(){
@@ -374,7 +396,7 @@ async function loadMaster(){
 const visitedThisMonth=ts=>new Set(reports.filter(r=>r.ts===ts&&monthKey(r.at)===monthKey(Date.now())).map(r=>r.store));
 
 /* ===== STORE PICKERS ===== */
-function fillRegion(){const rs=REGIONS.filter(r=>STORES.some(s=>s[0]===r));if(!rs.includes(sel.region)){sel.region="";sel.ts="";sel.store="";}
+function fillRegion(){const rs=[...REGIONS.filter(r=>STORES.some(s=>s[0]===r)),...uniq(STORES.map(s=>s[0])).filter(r=>r&&!REGIONS.includes(r)).sort()];if(!rs.includes(sel.region)){sel.region="";sel.ts="";sel.store="";}
   $("selRegion").innerHTML=`<option value="">Select region</option>`+rs.map(r=>`<option>${esc(r)}</option>`).join("");$("selRegion").value=sel.region;}
 function fillTS(){const ts=uniq(STORES.filter(s=>s[0]===sel.region).map(s=>s[1])).sort();if(!ts.includes(sel.ts)){sel.ts="";sel.store="";}
   $("selTS").innerHTML=`<option value="">Select TS</option>`+ts.map(t=>`<option>${esc(t)}</option>`).join("");$("selTS").disabled=!sel.region;$("selTS").value=sel.ts;}
